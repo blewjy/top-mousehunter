@@ -1,9 +1,7 @@
 const puppeteer = require("puppeteer");
 const axios = require("axios");
-const { createWorker, PSM } = require('tesseract.js');
-const exec = require("child_process").execSync;
-const fs = require("fs");
 
+const CAPTCHA_SOLVER_URL = "http://captcha"
 
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -15,17 +13,31 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
 }
 
-(async () => {
-    const msToWait = getRandomInt(5000, 60000); // random time between 5 sec and 60 sec
+async function run() {
+    console.log(`[${(new Date()).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })}] Doing a connection test to captcha solver...`);
+    const response = (await axios.get(`${CAPTCHA_SOLVER_URL}/hello`)).data.ok;
+    if (!response) {
+        const e = new Error("Failed to connect to captcha solver!");
+        e.name = "network";
+        throw e;
+    }
+    console.log(`[${(new Date()).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })}] Successfully connected to captcha solver!`);
 
+    const msToWait = getRandomInt(5000, 60000); // random time between 5 sec and 60 sec
     console.log(`[${(new Date()).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })}] Waiting for random amount of time first: ${msToWait / 1000} seconds`)
     await sleep(msToWait);
 
     console.log(`[${(new Date()).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })}] Starting hunt...`);
-    const browser = await puppeteer.launch({ args: ["--no-sandbox", "--disable-setuid-sandbox"] });
-    let worker;
-    try {
+    const browser = await puppeteer.launch({ 
+        args: [
+            "--disable-gpu",
+            "--disable-dev-shm-usage",
+            "--disable-setuid-sandbox",
+            "--no-sandbox",
+        ] 
+    });
 
+    try {
         const page = await browser.newPage();
         console.log(`[${(new Date()).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })}] Going to website...`);
         await page.goto("https://www.mousehuntgame.com/login.php");
@@ -50,66 +62,61 @@ function getRandomInt(min, max) {
         await sleep(10000);
         console.log(`[${(new Date()).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })}] We're in!`);
 
-        const cDiv = await page.$(
-            "div.mousehuntPage-puzzle-form-captcha-image img"
-        );
+        const dailyLoyaltyChest = await page.$("input.jsDialogClose.button");
+        console.log(`[${(new Date()).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })}] Checking for Daily Loyalty Chest...`);
+        if (dailyLoyaltyChest != null) {
+            console.log(`[${(new Date()).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })}] Collected Daily Loyalty Chest!`);
+            dailyLoyaltyChest.click();
+        } else {
+            console.log(`[${(new Date()).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })}] No chest found. Proceeding.`);
+        }
+
+        const cDiv = await page.$("div.mousehuntPage-puzzle-form-captcha-image img");
         console.log(`[${(new Date()).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })}] Checking for captcha...`);
 
         if (cDiv != null) {
             console.log(`[${(new Date()).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })}] FARK GOT CAPTCHA`);
-            const url = await page.$eval(
-                "div.mousehuntPage-puzzle-form-captcha-image img",
-                (el) => el.src
-            );
+            const url = await page.$eval("div.mousehuntPage-puzzle-form-captcha-image img", (el) => el.src);
             console.log(`[${(new Date()).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })}] Catpcha url: ${url}`);
-
-            worker = createWorker();
-            await worker.load();
-            await worker.loadLanguage('eng');
-            await worker.initialize('eng');
-            await worker.setParameters({
-                tessedit_pageseg_mode: PSM.PSM_SINGLE_LINE,
-            });
-
 
             let retries = 3;
             let gotError = true;
             
             while (gotError && retries > 0) {
-                exec(`source venv/bin/activate && python captcha-process.py "${url}" && deactivate`);
-                const { data: { text } } = await worker.recognize("captcha_processed.png");
-            
-                const c = text.replace(/\W/g, '');
+                const text = (await axios.get(`${CAPTCHA_SOLVER_URL}?${(new URLSearchParams({url})).toString()}`)).data;
+                var c = text.replace(/\W/g, '');
                 console.log(`[${(new Date()).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })}] Attempt ${4-retries}: ${c}`);
-	              await page.$eval("input.mousehuntPage-puzzle-form-code", (el, c) => (el.value = c), c);
+                await page.$eval("input.mousehuntPage-puzzle-form-code", (el, c) => (el.value = c), c);
                 console.log(`[${(new Date()).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })}] Entering captcha...`);
                 await sleep(2000);
-	              await page.$eval("input.mousehuntPage-puzzle-form-code-button", (el) => el.click());
+                await page.screenshot({path: "screenshot.png"});
+                await page.$eval("input.mousehuntPage-puzzle-form-code-button", (el) => el.click());
                 console.log(`[${(new Date()).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })}] Clicking button...`);
-	              await sleep(2000);
- 	              gotError = await page.$eval("div.mousehuntPage-puzzle-form-code-error", (el) => el.getBoundingClientRect().height > 0);
+                await sleep(2000);
+                const errorText = await page.$eval("div.mousehuntPage-puzzle-form-code-error", (el) => el.innerHTML);
+                gotError = errorText.includes("Incorrect claim code"); 
                 console.log(`[${(new Date()).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })}] Got error? ${gotError}`);
                 retries -= 1;
                 console.log(`[${(new Date()).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })}] Retries left: ${retries}`); 
             }
 		    
-	          if (gotError) {
-                const e = new Error(`URL: ${url}`);
-                e.name = "captcha";
-                throw e;
-	          }
+            if (gotError) {
+            const e = new Error(`URL: ${url}`);
+            e.name = "captcha";
+            throw e;
+            }
         }
         console.log(`[${(new Date()).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })}] Yay! No captcha!`);
 
-        const isVisible = await page.$eval("a.mousehuntHud-huntersHorn", (el) => el.getBoundingClientRect().height > 0);
+        const isHornVisible = await page.$eval("a.mousehuntHud-huntersHorn", (el) => el.getBoundingClientRect().height > 0);
+        const huntTimerText = await page.$eval("#huntTimer", (el) => el.innerHTML);
 
         console.log(`[${(new Date()).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })}] Checking if horn is visible...`);
 
-        if (isVisible) {
+        if (isHornVisible || huntTimerText === "Ready!") {
             console.log(`[${(new Date()).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })}] Ready to hunt! Let's do it!`);
         } else {
-            const t = await page.$eval("#huntTimer", (el) => el.innerHTML);
-            const e = new Error(`Not ready to hunt! Still got ${t}...`);
+            const e = new Error(`Not ready to hunt! Still got ${huntTimerText}...`);
             e.name = "notready";
             throw e;
         }
@@ -131,20 +138,10 @@ function getRandomInt(min, max) {
 
     } finally {
 
-	if (fs.existsSync("captcha.png")) {
-	    fs.unlinkSync("captcha.png");
-	}
-
-	if (fs.existsSync("captcha_processed.png")) {
-	    fs.unlinkSync("captcha_processed.png");
-	}
-
-
         console.log(`[${(new Date()).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })}] Closing browser and exiting...`);
-	if (worker != null) {
-            await worker.terminate();
-	}
         browser.close();
 
     }
-})();
+}
+
+module.exports = run;

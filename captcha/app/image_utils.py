@@ -1,11 +1,16 @@
-from PIL import Image
-from io import BytesIO
-import numpy as np
 import cv2
+import numpy as np
 import requests
-import sys
+from io import BytesIO
+from PIL import Image
 
-def preprocess_image(image):
+
+def download_image(url: str) -> Image:
+    response = requests.get(url)
+    image_bytes = BytesIO(response.content)
+    return Image.open(image_bytes)
+
+def preprocess_image(image: Image) -> Image:
     def kernel(*size):
         return np.ones(size, np.uint8)
 
@@ -31,15 +36,3 @@ def preprocess_image(image):
     image_arr = cv2.erode(image_arr, kernel(5, 5), iterations=2)
 
     return Image.fromarray(image_arr)
-
-def download_image(url):
-    response = requests.get(url)
-    image_bytes = BytesIO(response.content)
-    return Image.open(image_bytes)
-
-
-url = str(sys.argv[-1])
-image = download_image(url)
-image.save("captcha.png")
-image = preprocess_image(image)
-image.save("captcha_processed.png")

@@ -1,0 +1,9 @@
+fastapi
+numpy
+opencv-python
+pillow
+pytesseract
+requests
+pytest
+requests-mock
+pytz

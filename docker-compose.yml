@@ -1,0 +1,16 @@
+services:
+  bot:
+    build: ./bot
+    image: bot
+    container_name: bot
+  captcha:
+    build: ./captcha
+    image: captcha
+    container_name: captcha
+    volumes:
+      - captcha-images:/data
+volumes:
+  captcha-images:
+
+# docker-compose command
+# > docker-compose up -d --force-recreate
