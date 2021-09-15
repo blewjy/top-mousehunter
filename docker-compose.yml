@@ -1,22 +1,39 @@
 services:
+
   bot:
     build: ./bot
     image: bot
     container_name: bot
     depends_on:
-      - captcha
+      captcha:
+        condition: service_healthy
+    healthcheck:
+      test: curl -f http://localhost/hello || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
   captcha:
     build: ./captcha
     image: captcha
     container_name: captcha
     volumes:
       - captcha-images:/data
+    healthcheck:
+      test: curl -f http://localhost/hello || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
   scheduler:
     build: ./scheduler
     image: scheduler
     container_name: scheduler
     depends_on:
-      - bot
+      bot:
+        condition: service_healthy
 volumes:
   captcha-images:
 
