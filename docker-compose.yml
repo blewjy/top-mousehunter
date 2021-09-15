@@ -3,12 +3,20 @@ services:
     build: ./bot
     image: bot
     container_name: bot
+    depends_on:
+      - captcha
   captcha:
     build: ./captcha
     image: captcha
     container_name: captcha
     volumes:
       - captcha-images:/data
+  scheduler:
+    build: ./scheduler
+    image: scheduler
+    container_name: scheduler
+    depends_on:
+      - bot
 volumes:
   captcha-images:
 

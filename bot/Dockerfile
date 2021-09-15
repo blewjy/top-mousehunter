@@ -13,4 +13,6 @@ RUN chmod -R o+rwx node_modules/puppeteer/.local-chromium
 
 COPY . .
 
-CMD ["node", "scheduler.js"]
+EXPOSE 80
+
+CMD ["node", "listener.js"]
