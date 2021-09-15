@@ -9,7 +9,7 @@ services:
         condition: service_healthy
     healthcheck:
       test: curl -f http://localhost/hello || exit 1
-      interval: 10s
+      interval: 2m
       timeout: 10s
       retries: 3
       start_period: 30s
@@ -22,7 +22,7 @@ services:
       - captcha-images:/data
     healthcheck:
       test: curl -f http://localhost/hello || exit 1
-      interval: 10s
+      interval: 2m
       timeout: 10s
       retries: 3
       start_period: 30s
