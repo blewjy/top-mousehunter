@@ -35,12 +35,14 @@ func post() {
 
 	if err != nil {
 		fmt.Printf("An Error Occured %v\n", err)
+		return
 	}
 
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 
 	sb := string(body)
@@ -50,6 +52,7 @@ func post() {
 func run() {
 	curr_time, err := getCurrentTime()
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 	fmt.Println(curr_time, "Sending POST request to bot!")

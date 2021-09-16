@@ -4,15 +4,6 @@ services:
     build: ./bot
     image: bot
     container_name: bot
-    depends_on:
-      captcha:
-        condition: service_healthy
-    healthcheck:
-      test: curl -f http://localhost/hello || exit 1
-      interval: 2m
-      timeout: 10s
-      retries: 3
-      start_period: 30s
 
   captcha:
     build: ./captcha
@@ -20,22 +11,14 @@ services:
     container_name: captcha
     volumes:
       - captcha-images:/data
-    healthcheck:
-      test: curl -f http://localhost/hello || exit 1
-      interval: 2m
-      timeout: 10s
-      retries: 3
-      start_period: 30s
 
   scheduler:
     build: ./scheduler
     image: scheduler
     container_name: scheduler
-    depends_on:
-      bot:
-        condition: service_healthy
+    
 volumes:
   captcha-images:
 
 # docker-compose command
-# > docker-compose up -d --force-recreate
+# > docker-compose up --build -d
