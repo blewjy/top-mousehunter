@@ -1,9 +1,9 @@
 FROM tiangolo/uvicorn-gunicorn-fastapi:python3.7
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends tesseract-ocr libtesseract-dev python3-opencv \
+    && apt-get install -y --no-install-recommends tesseract-ocr libtesseract-dev python3-opencv libsm6 libxrender1 libfontconfig1 \
     && rm -rf /var/lib/apt/lists/*
-RUN apt-get install -y ffmpeg libsm6 libxext6 
+RUN apt-get install -y libgl1
 RUN apt-get install -y curl
 
 COPY ./app /app

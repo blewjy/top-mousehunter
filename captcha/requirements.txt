@@ -1,6 +1,6 @@
 fastapi
 numpy
-opencv-python
+opencv-python-headless
 pillow
 pytesseract
 requests
