@@ -16,17 +16,17 @@ function getRandomInt(min, max) {
 
 async function run() {
     log.info(`Doing a connection test to captcha solver...`);
-    const response = (await axios.get(`${CAPTCHA_SOLVER_URL}/hello`)).data.ok;
-    if (!response) {
-        const e = new Error("Failed to connect to captcha solver!");
-        e.name = "network";
-        throw e;
-    }
+    // const response = (await axios.get(`${CAPTCHA_SOLVER_URL}/hello`)).data.ok;
+    // if (!response) {
+    //     const e = new Error("Failed to connect to captcha solver!");
+    //     e.name = "network";
+    //     throw e;
+    // }
     log.info(`Successfully connected to captcha solver!`);
 
-    const msToWait = getRandomInt(5000, 60000); // random time between 5 sec and 60 sec
-    log.info(`Waiting for random amount of time first: ${msToWait / 1000} seconds`)
-    await sleep(msToWait);
+    // const msToWait = getRandomInt(5000, 60000); // random time between 5 sec and 60 sec
+    // log.info(`Waiting for random amount of time first: ${msToWait / 1000} seconds`)
+    // await sleep(msToWait);
 
     log.info(`Starting hunt...`);
     const browser = await puppeteer.launch({ 
@@ -127,12 +127,76 @@ async function run() {
 
         await sleep(5000);
 
-        log.info(`Hunt complete!`);
+        const journalEntry = await page.$eval("#journalEntries5952155 > div.active", (e) => {
+            function getType(classList) {
+              if (classList.includes('catchsuccessloot')) {
+                if (classList.includes('luckycatchsuccess')) {
+                  return {success:true,attract:true,lucky:true,loot:true,stale:false,damage:false}
+                } else {
+                  return {success:true,attract:true,lucky:false,loot:true,stale:false,damage:false}
+                }
+              } else if (classList.includes('catchsuccess')) {
+                if (classList.includes('luckycatchsuccess')) {
+                  return {success:true,attract:true,lucky:true,loot:false,stale:false,damage:false}
+                } else {
+                  return {success:true,attract:true,lucky:false,loot:false,stale:false,damage:false}
+                }
+              } else if (classList.includes('attractionfailure')) {
+                return {success:false,attract:false,lucky:false,loot:false,stale:false,damage:false}
+              } else if (classList.includes('attractionfailurestale')) {
+                return {success:false,attract:false,lucky:false,loot:false,stale:true,damage:false}
+              } else if (classList.includes('catchfailure')) {
+                return {success:false,attract:true,lucky:false,loot:false,stale:false,damage:false}
+              } else if (classList.includes('catchfailuredamage')) {
+                return {success:false,attract:true,lucky:false,loot:false,stale:false,damage:true}
+              } else {
+                return "gg mofo";
+              }
+            }
+  
+            var t = getType(Array.from(e.classList))
+            var date = new Date().toLocaleDateString();
+            var [time, location] = e.querySelector("div.journaldate").innerHTML.split(" - ");
+            var mouse = "";
+            var mouseloot = [];
+  
+            if (t.success) {
+              var a_arr = Array.from(e.querySelectorAll("div.journaltext a")).map(p => p.innerHTML);
+              mouse = a_arr[0];
+              a_arr.shift();
+              mouseloot = a_arr;
+            } else {
+              if (t.attract) {
+                mouse = e.querySelector("div.journaltext a").innerHTML;
+              }
+            }
+  
+            var mousepoints = "";
+            var mousegold = "";
+            if (t.success) {
+              var textarr = e.querySelector("div.journaltext").innerHTML.split(" ");
+              mousepoints = textarr[textarr.indexOf("points") - 1];
+              mousegold = textarr[textarr.indexOf("gold.") - 1];
+            }
+  
+            return {
+              date,
+              time,
+              location,
+              ...t,
+              mouse,
+              mousepoints,
+              mousegold,
+              mouseloot
+            };
+          })
+            
+          log.info(`Hunt complete! Hunt details: ${JSON.stringify(journalEntry)}`);
 
     } catch (err) {
 
         log.info(`Oh no... We got an error`);
-        console.error(`${err}`);
+        log.error(`${err}`);
         if (err.name != "notready") {
             axios.post(`https://api.telegram.org/bot1740800853:AAH27qGmkzckFDLDe260qt9mx0cGVQ5-NU8/sendMessage?chat_id=422600598&text=${err}`);
         }

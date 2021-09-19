@@ -31,7 +31,7 @@
 Captcha Service <---> Bot Service (Node)  |     Reporting Service
      (Python)                |            |       |
                              |            |       |
-                            Database Service (Java)
+                            Database Service (Go)
                                     |
                                     |
                                 Database (Postgres)
