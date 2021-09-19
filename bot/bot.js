@@ -16,17 +16,17 @@ function getRandomInt(min, max) {
 
 async function run() {
     log.info(`Doing a connection test to captcha solver...`);
-    // const response = (await axios.get(`${CAPTCHA_SOLVER_URL}/hello`)).data.ok;
-    // if (!response) {
-    //     const e = new Error("Failed to connect to captcha solver!");
-    //     e.name = "network";
-    //     throw e;
-    // }
+    const response = (await axios.get(`${CAPTCHA_SOLVER_URL}/hello`)).data.ok;
+    if (!response) {
+        const e = new Error("Failed to connect to captcha solver!");
+        e.name = "network";
+        throw e;
+    }
     log.info(`Successfully connected to captcha solver!`);
 
-    // const msToWait = getRandomInt(5000, 60000); // random time between 5 sec and 60 sec
-    // log.info(`Waiting for random amount of time first: ${msToWait / 1000} seconds`)
-    // await sleep(msToWait);
+    const msToWait = getRandomInt(5000, 60000); // random time between 5 sec and 60 sec
+    log.info(`Waiting for random amount of time first: ${msToWait / 1000} seconds`)
+    await sleep(msToWait);
 
     log.info(`Starting hunt...`);
     const browser = await puppeteer.launch({ 
