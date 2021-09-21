@@ -197,9 +197,6 @@ async function run() {
 
         log.info(`Oh no... We got an error`);
         log.error(`${err}`);
-        if (err.name != "notready") {
-            axios.post(`https://api.telegram.org/bot1740800853:AAH27qGmkzckFDLDe260qt9mx0cGVQ5-NU8/sendMessage?chat_id=422600598&text=${err}`);
-        }
 
     } finally {
 
