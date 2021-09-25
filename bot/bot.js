@@ -160,7 +160,7 @@ async function run() {
     await sleep(5000);
 
     const journalEntry = await page.$eval(
-      "#journalEntries8180499 > div.active",
+      "#journalEntries5952155 > div.active",
       (e) => {
         function getType(classList) {
           if (classList.includes("catchsuccessloot")) {
