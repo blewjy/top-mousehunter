@@ -16,6 +16,16 @@ function getRandomInt(min, max) {
 }
 
 async function run() {
+  let success = false;
+  let numRetries = 1;
+  do {
+    log.info(`Attempt #${numRetries}...`);
+    success = await hunt();
+    log.info(`Attempt #${numRetries} success? ${success}`);
+  } while (!success && numRetries <= 3)
+}
+
+async function hunt() {
   log.info(`Doing a connection test to captcha solver...`);
   const response = (await axios.get(`${CAPTCHA_SOLVER_URL}/hello`)).data.ok;
   if (!response) {
@@ -353,9 +363,13 @@ async function run() {
       .data;
     log.info(`Done! Response from db service: ${JSON.stringify(response)}`);
 
+    return true;
+
   } catch (err) {
     log.info(`Oh no... We got an error`);
     log.error(`${err}`);
+
+    return false;
   } finally {
     log.info(`Closing browser and exiting...`);
     browser.close();

@@ -4,6 +4,7 @@ services:
     build: ./bot
     image: bot
     container_name: bot
+    init: true
     volumes:
       - logs:/logs
 
