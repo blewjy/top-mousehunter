@@ -373,7 +373,7 @@ async function hunt() {
     return false;
   } finally {
     log.info(`Closing browser and exiting...`);
-    browser.close();
+    await browser.close();
   }
 }
 
