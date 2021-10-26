@@ -22,6 +22,7 @@ async function run() {
     log.info(`Attempt #${numRetries}...`);
     success = await hunt();
     log.info(`Attempt #${numRetries} success? ${success}`);
+    numRetries += 1;
   } while (!success && numRetries <= 3)
 }
 
@@ -35,7 +36,7 @@ async function hunt() {
   }
   log.info(`Successfully connected to captcha solver!`);
 
-  const msToWait = getRandomInt(5000, 60000); // random time between 5 sec and 60 sec
+  const msToWait = getRandomInt(5000, 30000); // random time between 5 sec and 30 sec
   log.info(
     `Waiting for random amount of time first: ${msToWait / 1000} seconds`
   );
